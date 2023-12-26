@@ -1,21 +1,45 @@
 const socket = io('ws://localhost:3500');
 
+const msgInput = document.querySelector('#message')
+const nameInput = document.querySelector('#name')
+const chatRoom = document.querySelector('#room')
 const activity = document.querySelector('.activity')
-const msgInput = document.querySelector('input')
+const usersList = document.querySelector('.user-list')
+const roomList = document.querySelector('.room-list')
+const chatDisplay = document.querySelector('.chat-display')
+
 
 
 function sendMessage(e){
     e.preventDefault();//submit the form without reloading the page
-    if(msgInput.value){ // if the msgInput value is not empty
-        socket.emit('message' , msgInput.value); // send the value to the server
+    if(nameInput.value && msgInput.value && chatRoom.value){ // if the msgInput and name and chat room contains something and not empty
+        socket.emit('message' , {
+            name: nameInput.value,
+            text: msgInput.value
+        }); // send the value to the server
         msgInput.value = ''; // reset the msgInput value
     }
     msgInput.focus(); // focus on the msgInput field
 }
 
-document.querySelector('form')
-    .addEventListener('submit', sendMessage);
+function enterRoom(e){
+    e.preventDefault();
+    if(nameInput.value && chatRoom.value){
+        socket.emit('enterRoom',{
+            name: nameInput.value,
+            room: chatRoom.value
+        });
+    }
+}
 
+document.querySelector('.form-msg')
+    .addEventListener('submit', sendMessage);
+document.querySelector('.form-join')
+    .addEventListener('submit', enterRoom);
+msgInput.addEventListener('keypress', ()=>{
+    socket.emit('activity', nameInput.value)
+})
+    
 // listen for messages from the server
 
 socket.on('message',(data) => {
@@ -25,9 +49,6 @@ socket.on('message',(data) => {
     document.querySelector('ul').appendChild(li);
 })
 
-msgInput.addEventListener('keypress', ()=>{
-    socket.emit('activity', socket.id.substring(0,5))
-})
 
 let activityTimer ;
 
